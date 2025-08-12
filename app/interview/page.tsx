@@ -5,8 +5,29 @@ import QuestionCard from '../components/Questionscard'
 import ProgressBar from '../components/Prograssbar'
 import { useSearchParams, useRouter } from 'next/navigation'
 
+interface SpeechRecognitionEventResult {
+  isFinal: boolean
+  0: { transcript: string }
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionEventResult[]
+}
+
+interface SpeechRecognitionType {
+  lang: string
+  interimResults: boolean
+  onresult: (ev: SpeechRecognitionEvent) => void
+  onend: () => void
+  start: () => void
+  stop: () => void
+}
+
 declare global {
-  interface Window { webkitSpeechRecognition: any }
+  interface Window {
+    webkitSpeechRecognition?: new () => SpeechRecognitionType
+    SpeechRecognition?: new () => SpeechRecognitionType
+  }
 }
 
 export default function InterviewPage() {
@@ -15,12 +36,10 @@ export default function InterviewPage() {
   const [questions, setQuestions] = useState<string[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null)
   const [transcript, setTranscript] = useState('')
   const [listening, setListening] = useState(false)
   const router = useRouter()
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<SpeechRecognitionType | null>(null)
 
   useEffect(() => {
     fetch('/api/geneartequestions', {
@@ -42,12 +61,12 @@ export default function InterviewPage() {
 
   useEffect(() => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SpeechRecognition) return
     const rec = new SpeechRecognition()
     rec.lang = 'en-US'
     rec.interimResults = true
-    rec.onresult = (ev: any) => {
+    rec.onresult = (ev: SpeechRecognitionEvent) => {
       let final = ''
       let interim = ''
       for (let i = 0; i < ev.results.length; i++) {
@@ -62,7 +81,7 @@ export default function InterviewPage() {
   }, [])
 
   useEffect(() => {
-    if (transcript && transcript.trim()) {
+    if (transcript.trim()) {
       setAnswers(prev => {
         const copy = [...prev]
         copy[currentIndex] = transcript
@@ -83,14 +102,6 @@ export default function InterviewPage() {
       recognitionRef.current.stop()
       setListening(false)
     }
-  }
-
-  function onAudioReady(blob: Blob) {
-    setAudioBlob(blob)
-  }
-
-  function onVideoReady(blob: Blob) {
-    setVideoBlob(blob)
   }
 
   function updateAnswerForCurrent(text: string) {
@@ -127,7 +138,7 @@ export default function InterviewPage() {
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
       <aside className="col-span-1">
-        <CameraPanel onAudioReady={onAudioReady} onVideoReady={onVideoReady} />
+        <CameraPanel />
         <div className="mt-4 flex gap-2">
           <button
             onClick={toggleListening}

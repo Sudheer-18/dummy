@@ -2,19 +2,41 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+type InterviewQuestion = {
+  question?: string
+  answer?: string
+  feedback?: string
+  strengths?: string[]
+  improvements?: string[]
+  score?: number
+}
+
+type InterviewReport = {
+  domain?: string
+  summary?: {
+    score?: number
+    avgRating?: number
+  }
+  questions?: InterviewQuestion[]
+  raw?: string
+}
+
 export default function ResultPage() {
-  const [report, setReport] = useState<any>(null)
+  const [report, setReport] = useState<InterviewReport | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     const raw = localStorage.getItem('ai_interview_report')
-    if (!raw) { router.push('/'); return }
+    if (!raw) {
+      router.push('/')
+      return
+    }
     try {
-      let parsed = JSON.parse(raw)
+      let parsed: InterviewReport = JSON.parse(raw)
 
       // If we got a wrapped markdown JSON string, parse it again
       if (parsed.raw && typeof parsed.raw === 'string') {
-        let clean = parsed.raw
+        const clean = parsed.raw
           .replace(/```json\s*/i, '') // remove starting ```json
           .replace(/```$/i, '')       // remove ending ```
           .trim()
@@ -57,7 +79,7 @@ export default function ResultPage() {
         {questions.length === 0 ? (
           <div className="text-center text-slate-500">No questions found.</div>
         ) : (
-          questions.map((q: any, i: number) => (
+          questions.map((q, i) => (
             <div className="bg-white p-4 rounded-xl shadow flex justify-between" key={i}>
               <div>
                 <div className="text-sm text-slate-500">Q{i + 1}</div>
@@ -70,7 +92,7 @@ export default function ResultPage() {
                     {(q?.strengths ?? []).length === 0 ? (
                       <li>—</li>
                     ) : (
-                      (q.strengths || []).map((s: string, idx: number) => <li key={idx}>{s}</li>)
+                      (q.strengths || []).map((s, idx) => <li key={idx}>{s}</li>)
                     )}
                   </ul>
                   <strong className="mt-2 block">Improvements:</strong>
@@ -78,7 +100,7 @@ export default function ResultPage() {
                     {(q?.improvements ?? []).length === 0 ? (
                       <li>—</li>
                     ) : (
-                      (q.improvements || []).map((s: string, idx: number) => <li key={idx}>{s}</li>)
+                      (q.improvements || []).map((s, idx) => <li key={idx}>{s}</li>)
                     )}
                   </ul>
                 </div>

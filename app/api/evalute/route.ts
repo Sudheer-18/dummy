@@ -19,6 +19,23 @@ interface EvaluationResult {
   raw?: string
 }
 
+interface GeminiPart {
+  text?: string
+}
+
+interface GeminiContent {
+  role?: string
+  parts?: GeminiPart[]
+}
+
+interface GeminiCandidate {
+  content?: GeminiContent
+}
+
+interface GeminiApiResponse {
+  candidates?: GeminiCandidate[]
+}
+
 export async function POST(req: Request) {
   if (!KEY) {
     return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
@@ -65,13 +82,11 @@ If the answer is correct, give a score accordingly. If no answer or incorrect, s
       })
     })
 
-    const data: unknown = await resp.json()
+    const data: GeminiApiResponse = await resp.json()
+
     const raw =
-      typeof data === 'object' &&
-      data !== null &&
-      'candidates' in data &&
-      Array.isArray((data as any).candidates)
-        ? (data as any).candidates?.[0]?.content?.parts?.[0]?.text || ''
+      Array.isArray(data.candidates) && data.candidates[0]?.content?.parts?.[0]?.text
+        ? data.candidates[0].content.parts[0].text ?? ''
         : ''
 
     let parsed: EvaluationResult | { raw: string }

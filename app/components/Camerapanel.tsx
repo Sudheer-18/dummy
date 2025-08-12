@@ -74,13 +74,15 @@ export default function CameraPanel({ onVideoReady, onAudioReady }: Props) {
     }
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     startCamera()
     return () => {
-      camStream?.getTracks().forEach(t => t.stop())
-      screenStream?.getTracks().forEach(t => t.stop())
+      camStream?.getTracks().forEach((t) => t.stop())
+      screenStream?.getTracks().forEach((t) => t.stop())
     }
+    // We intentionally exclude camStream and screenStream from deps
+    // so that cleanup runs only on unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
