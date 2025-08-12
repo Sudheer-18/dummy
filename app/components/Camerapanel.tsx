@@ -29,8 +29,11 @@ export default function CameraPanel({ onVideoReady, onAudioReady }: Props) {
 
   function startRecording() {
     if (!camStream) return alert('Start camera first')
-    // Record combined video+audio for video file
-    const combinedTracks = new MediaStream([...camStream.getVideoTracks(), ...camStream.getAudioTracks()])
+
+    const combinedTracks = new MediaStream([
+      ...camStream.getVideoTracks(),
+      ...camStream.getAudioTracks()
+    ])
     const vr = new MediaRecorder(combinedTracks, { mimeType: 'video/webm; codecs=vp8,opus' })
     videoChunks.current = []
     vr.ondataavailable = (e) => e.data.size && videoChunks.current.push(e.data)
@@ -42,7 +45,6 @@ export default function CameraPanel({ onVideoReady, onAudioReady }: Props) {
     vr.start()
     setVideoRecorder(vr)
 
-    // Also record audio-only for STT
     const ar = new MediaRecorder(new MediaStream(camStream.getAudioTracks()), { mimeType: 'audio/webm' })
     audioChunks.current = []
     ar.ondataavailable = (e) => e.data.size && audioChunks.current.push(e.data)
@@ -66,14 +68,13 @@ export default function CameraPanel({ onVideoReady, onAudioReady }: Props) {
     try {
       const s = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
       setScreenStream(s)
-      // Optionally open small preview window
-      // You can merge this stream elsewhere if you want to record screens too
     } catch (e) {
       console.error('Screen share failed', e)
       alert('Screen share failed or cancelled.')
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     startCamera()
     return () => {
@@ -91,14 +92,22 @@ export default function CameraPanel({ onVideoReady, onAudioReady }: Props) {
 
         <div className="mt-3 flex flex-col gap-2">
           {!recording ? (
-            <button onClick={startRecording} className="bg-blue-600 text-white px-4 py-2 rounded">Start Recording</button>
+            <button onClick={startRecording} className="bg-blue-600 text-white px-4 py-2 rounded">
+              Start Recording
+            </button>
           ) : (
-            <button onClick={stopRecording} className="bg-red-500 text-white px-4 py-2 rounded">Stop Recording</button>
+            <button onClick={stopRecording} className="bg-red-500 text-white px-4 py-2 rounded">
+              Stop Recording
+            </button>
           )}
 
-          <button onClick={startScreenShare} className="bg-slate-100 px-4 py-2 rounded">Start Screen Share</button>
+          <button onClick={startScreenShare} className="bg-slate-100 px-4 py-2 rounded">
+            Start Screen Share
+          </button>
 
-          <div className="text-xs text-slate-400">Tip: recordings are kept locally and can be uploaded optionally.</div>
+          <div className="text-xs text-slate-400">
+            Tip: recordings are kept locally and can be uploaded optionally.
+          </div>
         </div>
       </div>
     </div>

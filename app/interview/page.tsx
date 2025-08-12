@@ -40,7 +40,6 @@ export default function InterviewPage() {
       })
   }, [domain])
 
-  // Setup SpeechRecognition (live STT)
   useEffect(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -62,7 +61,6 @@ export default function InterviewPage() {
     recognitionRef.current = rec
   }, [])
 
-  // Auto-sync transcript into answers
   useEffect(() => {
     if (transcript && transcript.trim()) {
       setAnswers(prev => {
@@ -87,11 +85,11 @@ export default function InterviewPage() {
     }
   }
 
-  function onAudioReady(blob: Blob, url: string) {
+  function onAudioReady(blob: Blob) {
     setAudioBlob(blob)
   }
 
-  function onVideoReady(blob: Blob, url: string) {
+  function onVideoReady(blob: Blob) {
     setVideoBlob(blob)
   }
 
@@ -99,7 +97,7 @@ export default function InterviewPage() {
     const copy = [...answers]
     copy[currentIndex] = text
     setAnswers(copy)
-    setTranscript('') // clear transcript if typing
+    setTranscript('')
   }
 
   async function handleNext() {
@@ -123,19 +121,6 @@ export default function InterviewPage() {
         JSON.stringify({ ...json, domain, questions, answers: payload.answers })
       )
       router.push('/result')
-    }
-  }
-
-  async function uploadIfAny() {
-    if (videoBlob) {
-      const form = new FormData()
-      form.append('file', videoBlob, 'video.webm')
-      await fetch('/api/upload', { method: 'POST', body: form })
-    }
-    if (audioBlob) {
-      const form = new FormData()
-      form.append('file', audioBlob, 'audio.webm')
-      await fetch('/api/upload', { method: 'POST', body: form })
     }
   }
 
